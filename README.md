@@ -63,17 +63,6 @@ docker compose logs -f
 
 ---
 
-## Points d'Accès Principaux
-
-- **Interface Frontend Angular :** [http://localhost:4200](http://localhost:4200)
-  - Tableau de bord des transactions (résumés et détails complets)
-  - Formulaire de transfert / validation / insertion XML SEPA
-  - Recherche multicritère
-  - Documentation interactive des endpoints (consommée dynamiquement)
-- **API REST Spring Boot :** [http://localhost:8100/](http://localhost:8100/) (métadonnées & statut de santé en JSON)
-- **Catalogue de Documentation REST :** [http://localhost:8100/help](http://localhost:8100/help) (flux JSON des routes)
-- **Rapport de Conception complet :** [doc/rapport.pdf](doc/rapport.pdf)
-
 ## Fork
 
 Ce projet est un fork du projet [SEPA26](https://github.com/M1-ROUEN-GIL/application-rest).
