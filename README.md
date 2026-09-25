@@ -1,4 +1,4 @@
-# SEPA26 - Service REST ISO 20022 & Frontend Angular
+# SEPA26 - Système de transactions SEPA
 
 Projet de gestion et de traitement de transactions SEPA (ISO 20022).
 
