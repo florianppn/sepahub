@@ -1,0 +1,151 @@
+<div class="container">
+  <!-- Pop-up toast harmonisée -->
+  @if (feedback(); as fb) {
+    <div class="toast-notification" [class.toast-success]="fb.status === 'DELETED'" [class.toast-danger]="fb.status === 'ERROR'">
+      <span class="toast-icon">{{ fb.status === 'DELETED' ? '✅' : '❌' }}</span>
+      <div class="toast-content">
+        <strong class="toast-title">
+          {{ fb.status === 'DELETED' ? 'Transaction supprimée avec succès !' : 'Échec de la suppression' }}
+        </strong>
+        <span class="toast-subtitle">
+          {{ fb.status === 'DELETED' ? ('Identifiant : #' + fb.id) : (fb.description || 'Erreur lors du traitement.') }}
+        </span>
+      </div>
+      <button class="toast-close" (click)="dismissFeedback()" title="Fermer">&times;</button>
+    </div>
+  }
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Recherche de Transactions</h1>
+      <p class="page-subtitle">Recherchez des flux SEPA par date minimale (CreDtTm) et/ou montant minimum (CtrlSum) via <code>GET /sepa26/search</code>.</p>
+    </div>
+  </div>
+
+  <!-- Message d'erreur de recherche -->
+  @if (searchStatus() === 'ERROR') {
+    <div class="alert alert-danger">
+      <span class="alert-icon">❌</span>
+      <div class="alert-content">
+        <strong class="alert-title">Échec de la recherche</strong>
+        <p class="alert-message">Une erreur est survenue lors de l'exécution de la recherche. Le serveur backend est peut-être indisponible.</p>
+      </div>
+      <div class="alert-actions">
+        <button class="btn btn-secondary btn-sm" (click)="performSearch()">🔄 Réessayer</button>
+      </div>
+      <button class="alert-close" (click)="searchStatus.set('IDLE')" title="Fermer l'alerte">&times;</button>
+    </div>
+  }
+
+  <div class="card">
+    <div class="search-form-grid">
+      <div class="form-group">
+        <label class="form-label" for="searchDate">Date minimale d'émission :</label>
+        <input
+          type="date"
+          id="searchDate"
+          class="form-control"
+          [ngModel]="searchDate()"
+          (ngModelChange)="searchDate.set($event)"
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="searchSum">Montant minimum (€) :</label>
+        <input
+          type="number"
+          id="searchSum"
+          step="0.01"
+          placeholder="Ex: 100.00"
+          class="form-control"
+          [ngModel]="searchSum()"
+          (ngModelChange)="searchSum.set($event)"
+        />
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-secondary" (click)="reset()">Réinitialiser</button>
+      <button class="btn btn-primary" (click)="performSearch()" [disabled]="searchStatus() === 'LOADING'">
+        @if (searchStatus() === 'LOADING') {
+          <span class="spinner"></span> Recherche en cours...
+        } @else {
+          🔍 Lancer la recherche
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- Résultat de la recherche -->
+  @if (searchStatus() === 'NONE') {
+    <div class="alert alert-info">
+      <span class="alert-icon">ℹ️</span>
+      <div class="alert-content">
+        <strong class="alert-title">Aucun résultat trouvé</strong>
+        <p class="alert-message">Aucune transaction ne correspond à vos critères de recherche.</p>
+      </div>
+    </div>
+  } @else if (searchStatus() === 'OK') {
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">{{ results().length }} résultat(s) trouvé(s)</h2>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Date</th>
+              <th>Référence (PmtId)</th>
+              <th>Créancier</th>
+              <th>Débiteur</th>
+              <th>Montant</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (tx of results(); track tx.id || tx.pmtId) {
+              <tr>
+                <td><strong>#{{ tx.id }}</strong></td>
+                <td>{{ tx.date }}</td>
+                <td><code>{{ tx.pmtId }}</code></td>
+                <td>{{ tx.creditor }}</td>
+                <td>{{ tx.debtor }}</td>
+                <td><strong>{{ tx.amount | number:'1.2-2' }} {{ tx.currency }}</strong></td>
+                <td class="text-right table-actions">
+                  <a [routerLink]="['/transactions', tx.id]" class="btn btn-secondary btn-sm" title="Détails de la transaction">
+                    Détail
+                  </a>
+                  <button class="btn btn-danger btn-sm" (click)="askDelete(tx)" title="Supprimer la transaction">
+                    Supprimer
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Modal de confirmation de suppression -->
+  @if (selectedTxForDelete(); as target) {
+    <div class="modal-backdrop">
+      <div class="modal-box">
+        <h3 class="modal-title">Confirmer la suppression</h3>
+        <p class="modal-text">
+          Êtes-vous certain de vouloir supprimer la transaction <strong>{{ target.pmtId }}</strong> (ID #{{ target.id }}) ?
+          Cette opération est irréversible.
+        </p>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="cancelDelete()" [disabled]="deleting()">Annuler</button>
+          <button class="btn btn-danger" (click)="confirmDelete()" [disabled]="deleting()">
+            @if (deleting()) { <span class="spinner"></span> }
+            Confirmer la suppression
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

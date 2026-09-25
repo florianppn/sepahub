@@ -1,0 +1,71 @@
+<nav class="navbar">
+  <div class="navbar-container">
+    <div class="navbar-brand">
+      <a routerLink="/" class="brand-link">
+        <span class="brand-badge">SEPA26</span>
+        <span class="brand-text">Hub ISO 20022</span>
+      </a>
+    </div>
+
+    <ul class="navbar-menu">
+      <li>
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Accueil</a>
+      </li>
+      <li>
+        <a routerLink="/transactions" routerLinkActive="active">Transactions</a>
+      </li>
+      <li>
+        <a routerLink="/transfert" routerLinkActive="active">Transférer XML</a>
+      </li>
+      <li>
+        <a routerLink="/search" routerLinkActive="active">Recherche</a>
+      </li>
+      <li>
+        <a routerLink="/help" routerLinkActive="active">Documentation API</a>
+      </li>
+    </ul>
+
+    <div class="navbar-actions">
+      <button (click)="openXmlModal($event)" class="api-link" title="Visualiser le flux XML formaté">
+        Flux XML &lt;/&gt;
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- Modale de visualisation XML propre et indentée -->
+@if (showXmlModal()) {
+  <div class="modal-backdrop" (click)="closeXmlModal()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title">Flux XML des Dernières Transactions</h2>
+          <span class="modal-endpoint">Endpoint : <code>/sepa26/resume/xml</code></span>
+        </div>
+        <button class="modal-close" (click)="closeXmlModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        @if (loading()) {
+          <div class="loading-state">
+            <span class="spinner"></span>
+            <p>Chargement et indentation du flux XML...</p>
+          </div>
+        } @else {
+          <pre class="xml-viewer"><code>{{ xmlData() }}</code></pre>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" (click)="copyXml()" [disabled]="loading()">
+          @if (copied()) {
+            ✅ Copié !
+          } @else {
+            📋 Copier le XML
+          }
+        </button>
+        <button class="btn btn-primary btn-sm" (click)="closeXmlModal()">Fermer</button>
+      </div>
+    </div>
+  </div>
+}

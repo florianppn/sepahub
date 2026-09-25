@@ -1,0 +1,142 @@
+<div class="container">
+  <div class="page-header">
+    <div>
+      <a routerLink="/transactions" class="back-link">&larr; Retour à la liste des transactions</a>
+      <h1 class="page-title">Détail de la Transaction #{{ id() }}</h1>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="card p-0">
+      <div class="loading-state">
+        <span class="spinner"></span>
+        <p>Chargement des informations du document SEPA...</p>
+      </div>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="error-state-card">
+      <div class="error-state-icon">🔌</div>
+      <h2 class="error-state-title">Impossible d'afficher cette transaction</h2>
+      <p class="error-state-desc">{{ errorMessage() }}</p>
+      <div class="error-state-actions">
+        @if (id(); as currentId) {
+          <button class="btn btn-primary" (click)="loadDetail(currentId)">🔄 Réessayer</button>
+        }
+        <a routerLink="/transactions" class="btn btn-secondary">Retour aux transactions</a>
+      </div>
+    </div>
+  } @else if (detail(); as d) {
+    <!-- Tabs Navigation -->
+    <div class="tabs">
+      <button class="tab-button" [class.active]="activeTab() === 'structured'" (click)="activeTab.set('structured')">
+        Vue Synthétique
+      </button>
+      <button class="tab-button" [class.active]="activeTab() === 'xml'" (click)="activeTab.set('xml')">
+        Flux XML Brut (ISO 20022)
+      </button>
+      <button class="tab-button" [class.active]="activeTab() === 'xslt'" (click)="activeTab.set('xslt')">
+        Rendu HTML (XSLT Backend)
+      </button>
+    </div>
+
+    <!-- Structured Tab -->
+    @if (activeTab() === 'structured') {
+      <div class="detail-grid">
+        <!-- Informations Générales -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">En-tête de Groupe (GrpHdr)</h2>
+          </div>
+          <div class="info-list">
+            <div class="info-item">
+              <span class="info-label">Message ID (MsgId) :</span>
+              <span class="info-value"><code>{{ d.msgId }}</code></span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Date & Heure d'émission :</span>
+              <span class="info-value">{{ d.creDtTm }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Nombre de transactions :</span>
+              <span class="info-value">{{ d.nbOfTxs }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Somme de contrôle (CtrlSum) :</span>
+              <span class="info-value"><strong>{{ d.ctrlSum }} {{ d.instdAmtCcy }}</strong></span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Partie Initiatrice :</span>
+              <span class="info-value">{{ d.initgPty }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Informations Prélèvement -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Transaction de Débit (DrctDbtTxInf)</h2>
+          </div>
+          <div class="info-list">
+            <div class="info-item">
+              <span class="info-label">Référence Prélèvement (PmtId) :</span>
+              <span class="info-value"><code>{{ d.pmtId }}</code></span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Montant Instruit :</span>
+              <span class="info-value text-primary-strong">
+                {{ d.instdAmt }} {{ d.instdAmtCcy }}
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Informations de Remise :</span>
+              <span class="info-value">{{ d.rmtInf }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Créancier & Débiteur -->
+        <div class="card grid-full-width">
+          <div class="card-header">
+            <h2 class="card-title">Parties Prenantes (Créancier & Débiteur)</h2>
+          </div>
+          <div class="parties-grid">
+            <div class="party-box">
+              <span class="party-role">Créancier (Bénéficiaire)</span>
+              <h3 class="party-name">{{ d.cdtrNm }}</h3>
+              <p class="party-iban">IBAN : <code>{{ d.cdtrIban }}</code></p>
+            </div>
+            <div class="party-box">
+              <span class="party-role">Débiteur (Payeur)</span>
+              <h3 class="party-name">{{ d.dbtrNm }}</h3>
+              <p class="party-iban">IBAN : <code>{{ d.dbtrIban }}</code></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- XML Tab -->
+    @if (activeTab() === 'xml') {
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Contenu XML Complet (ISO 20022 pain.008)</h2>
+          <button class="btn btn-secondary btn-sm" (click)="copyXml()">
+            {{ copied() ? '✅ Copié !' : '📋 Copier le XML' }}
+          </button>
+        </div>
+        <pre class="code-block"><code>{{ rawXml() }}</code></pre>
+      </div>
+    }
+
+    <!-- XSLT Tab -->
+    @if (activeTab() === 'xslt') {
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Rendu généré via la feuille de style XSLT</h2>
+          <a [href]="'/sepa26/html/' + id()" target="_blank" class="btn btn-outline btn-sm">Ouvrir l'URL brute ↗</a>
+        </div>
+        <div class="xslt-container" [innerHTML]="rawHtml()"></div>
+      </div>
+    }
+  }
+</div>

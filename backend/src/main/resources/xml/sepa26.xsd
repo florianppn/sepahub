@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://univ.fr/sepa26"
+           xmlns="http://univ.fr/sepa26"
+           elementFormDefault="qualified">
+
+    <xs:simpleType name="Max35Text">
+        <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:maxLength value="35"/>
+            <xs:pattern value="([a-zA-Z0-9\-?:().,'+ ]+(/[a-zA-Z0-9\-?:().,'+ ]+)*)"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="Max140Text">
+        <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:maxLength value="140"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="SeqTpType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="FRST"/>
+            <xs:enumeration value="RCUR"/>
+            <xs:enumeration value="OOFF"/>
+            <xs:enumeration value="FNAL"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="NbOfTxsType">
+        <xs:restriction base="xs:positiveInteger">
+            <xs:totalDigits value="15"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="AmountType">
+        <xs:restriction base="xs:decimal">
+            <xs:fractionDigits value="2"/>
+            <xs:totalDigits value="18"/>
+            <xs:pattern value="[0-9]{1,15}(\.[0-9]{1,2})?"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="IBANType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}"/>
+            <xs:minLength value="15"/>
+            <xs:maxLength value="34"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="BICType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="PartyType">
+        <xs:sequence>
+            <xs:element name="Nm" type="Max35Text"/>
+        </xs:sequence>
+    </xs:complexType>
+
+
+    <xs:complexType name="AccountType">
+        <xs:sequence>
+            <xs:element name="Id">
+                <xs:complexType>
+                    <xs:choice>
+                        <xs:element name="IBAN" type="IBANType"/>
+                        <xs:element name="Othr">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:element name="Id" type="Max35Text"/>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:choice>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="AgentType">
+        <xs:sequence>
+            <xs:element name="FinInstnId">
+                <xs:complexType>
+                    <xs:choice>
+                        <xs:element name="BIC" type="BICType" minOccurs="0"/>
+                        <xs:element name="Othr" minOccurs="0">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:element name="Id" type="Max35Text"/>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:choice>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="PmtId" type="Max35Text"/>
+
+    <xs:element name="InstdAmt">
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="AmountType">
+                    <xs:attribute name="Ccy" type="xs:string" use="required" fixed="EUR"/>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="DrctDbtTx">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="MndtRltdInf">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="MndtId" type="Max35Text"/>
+                            <xs:element name="DtOfSgntr" type="xs:date"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="DbtrAgt" type="AgentType"/>
+
+    <xs:element name="Dbtr" type="PartyType"/>
+
+    <xs:element name="DbtrAcct" type="AccountType"/>
+
+    <xs:element name="RmtInf" type="xs:string"/>
+
+    <xs:element name="DrctDbtTxInf">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="PmtId" type="Max35Text"/>
+                <xs:element ref="InstdAmt"/>
+                <xs:element ref="DrctDbtTx"/>
+                <xs:element ref="DbtrAgt"/>
+                <xs:element ref="Dbtr"/>
+                <xs:element ref="DbtrAcct"/>
+                <xs:element ref="RmtInf" minOccurs="0"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="GrpHdr">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="MsgId" type="Max35Text"/>
+                <xs:element name="CreDtTm" type="xs:dateTime"/>
+                <xs:element name="NbOfTxs" type="NbOfTxsType"/>
+                <xs:element name="CtrlSum" type="AmountType"/>
+                <xs:element name="InitgPty" type="PartyType"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="PmtInf">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="PmtInfId" type="Max35Text"/>
+                <xs:element name="NbOfTxs" type="NbOfTxsType"/>
+                <xs:element name="CtrlSum" type="AmountType"/>
+                <xs:element name="PmtTpInf">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="SvcLvl" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="Cd" type="Max35Text"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="LclInstrm" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="Cd" type="Max35Text"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="SeqTp" type="SeqTpType"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="ReqdColltnDt" type="xs:date"/>
+                <xs:element name="Cdtr" type="PartyType"/>
+                <xs:element name="CdtrAcct" type="AccountType"/>
+                <xs:element name="CdtrAgt" type="AgentType"/>
+                <xs:element name="CdtrSchmeId" minOccurs="0">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="Id">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="PrvtId">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="Othr">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="Id" type="Max35Text"/>
+                                                                <xs:element name="SchmeNm">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="Prtry" type="Max35Text"/>
+                                                                        </xs:sequence>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element ref="DrctDbtTxInf" minOccurs="1" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="CstmrDrctDbtInitn">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="GrpHdr"/>
+                <xs:element ref="PmtInf" minOccurs="1" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="Document">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="CstmrDrctDbtInitn"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

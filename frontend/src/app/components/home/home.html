@@ -1,0 +1,48 @@
+<div class="container home-container">
+  <!-- En-tête minimaliste -->
+  <header class="minimal-header">
+    <div>
+      <h1 class="main-title">SEPA26</h1>
+      <p class="main-subtitle">Gestion des transactions de prélèvement ISO 20022</p>
+    </div>
+  </header>
+
+  <!-- Cartes d'action essentielles -->
+  <div class="minimal-grid">
+    <a routerLink="/transactions" class="minimal-tile">
+      <div class="tile-icon">📋</div>
+      <div class="tile-body">
+        <h2 class="tile-title">Transactions</h2>
+        <p class="tile-description">Consulter la liste des prélèvements, voir le détail ISO 20022 et supprimer.</p>
+      </div>
+      <span class="tile-arrow">&rarr;</span>
+    </a>
+
+    <a routerLink="/transfert" class="minimal-tile">
+      <div class="tile-icon">📥</div>
+      <div class="tile-body">
+        <h2 class="tile-title">Transférer XML</h2>
+        <p class="tile-description">Importer ou saisir un flux XML SEPA avec validation XSD immédiate.</p>
+      </div>
+      <span class="tile-arrow">&rarr;</span>
+    </a>
+
+    <a routerLink="/search" class="minimal-tile">
+      <div class="tile-icon">🔍</div>
+      <div class="tile-body">
+        <h2 class="tile-title">Recherche</h2>
+        <p class="tile-description">Filtrer les flux par date d'émission minimale et seuil de montant.</p>
+      </div>
+      <span class="tile-arrow">&rarr;</span>
+    </a>
+
+    <a routerLink="/help" class="minimal-tile">
+      <div class="tile-icon">📖</div>
+      <div class="tile-body">
+        <h2 class="tile-title">Documentation API</h2>
+        <p class="tile-description">Consulter la liste exhaustive des points d'accès REST et formats attendus.</p>
+      </div>
+      <span class="tile-arrow">&rarr;</span>
+    </a>
+  </div>
+</div>

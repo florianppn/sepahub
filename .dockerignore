@@ -1,0 +1,9 @@
+backend/target/
+frontend/node_modules/
+frontend/.angular/
+frontend/dist/
+.git/
+doc/
+.env
+.env.*
+*.env

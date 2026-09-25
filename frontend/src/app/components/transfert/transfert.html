@@ -1,0 +1,78 @@
+<div class="container">
+  <!-- Pop-up toast harmonisée -->
+  @if (showSuccessPopup()) {
+    <div class="toast-notification toast-success">
+      <span class="toast-icon">✅</span>
+      <div class="toast-content">
+        <strong class="toast-title">Document enregistré avec succès !</strong>
+        @if (successId(); as id) {
+          <span class="toast-subtitle">Identifiant : #{{ id }}</span>
+        }
+      </div>
+      <button class="toast-close" (click)="dismissPopup()" title="Fermer">&times;</button>
+    </div>
+  }
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Transfert de Document SEPA</h1>
+      <p class="page-subtitle">Ajoutez une nouvelle transaction via l'endpoint <code>POST /sepa26/insert</code> avec validation du schéma XSD.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-outline" (click)="loadSampleXml()">Charger un exemple valide</button>
+      <button class="btn btn-secondary" (click)="clear()">Effacer</button>
+    </div>
+  </div>
+
+  <!-- Message d'erreur uniquement en cas de rejet -->
+  @if (errorMessage(); as msg) {
+    <div class="alert alert-danger">
+      <span class="alert-icon">❌</span>
+      <div class="alert-content">
+        <strong class="alert-title">Échec du transfert : {{ errorStatus() }}</strong>
+        <p class="alert-message">{{ msg }}</p>
+      </div>
+      <button class="alert-close" (click)="errorMessage.set(null)" title="Fermer l'alerte">&times;</button>
+    </div>
+  }
+
+  <div class="card">
+    <div class="form-group">
+      <label class="form-label" for="xmlFileInput">Importer un fichier XML :</label>
+      <input type="file" id="xmlFileInput" accept=".xml" (change)="onFileSelected($event)" class="form-control" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="xmlContent">Contenu XML du Document (ISO 20022 pain.008) :</label>
+      <textarea
+        id="xmlContent"
+        class="form-control xml-editor"
+        rows="16"
+        placeholder="Collez ici votre document XML <Document xmlns=&quot;http://univ.fr/sepa26&quot;>...</Document>"
+        [ngModel]="xmlContent()"
+        (ngModelChange)="xmlContent.set($event)">
+      </textarea>
+    </div>
+
+    <div class="form-options">
+      <label class="checkbox-label">
+        <input
+          type="checkbox"
+          [checked]="validateXsd()"
+          (change)="validateXsd.set(!validateXsd())"
+        />
+        <span>Valider la conformité avec le schéma XSD officiel avant insertion</span>
+      </label>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-primary" (click)="submitXml()" [disabled]="loading() || !xmlContent()">
+        @if (loading()) {
+          <span class="spinner"></span> Transfert et validation en cours...
+        } @else {
+          Valider & Envoyer la transaction
+        }
+      </button>
+    </div>
+  </div>
+</div>

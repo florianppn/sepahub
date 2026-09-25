@@ -1,0 +1,74 @@
+<div class="container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Documentation de l'API REST SEPA26</h1>
+      <p class="page-subtitle">Spécification exhaustive des routes exposées dynamiquement par le backend Spring Boot.</p>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="error-state-card">
+      <div class="error-state-icon">🔌</div>
+      <h2 class="error-state-title">Documentation indisponible</h2>
+      <p class="error-state-desc">{{ errorMessage() }}</p>
+      <div class="error-state-actions">
+        <button class="btn btn-primary" (click)="loadEndpoints()" [disabled]="loading()">
+          @if (loading()) {
+            <span class="spinner"></span>
+          } @else {
+            🔄
+          }
+          Réessayer
+        </button>
+        <a routerLink="/" class="btn btn-secondary">Retour à l'accueil</a>
+      </div>
+    </div>
+  } @else {
+    <div class="card">
+      @if (loading()) {
+        <div class="loading-state">
+          <span class="spinner"></span>
+          <p>Chargement de la documentation depuis le backend...</p>
+        </div>
+      } @else {
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Méthode</th>
+                <th>Point d'accès (URL)</th>
+                <th>Format de retour</th>
+                <th>Opération</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (ep of endpoints(); track ep.url + ep.method) {
+                <tr>
+                  <td>
+                    <span class="badge"
+                      [class.badge-success]="ep.method === 'GET'"
+                      [class.badge-primary]="ep.method === 'POST'"
+                      [class.badge-danger]="ep.method === 'DELETE'">
+                      {{ ep.method }}
+                    </span>
+                  </td>
+                  <td><code>{{ ep.url }}</code></td>
+                  <td><span class="badge badge-warning">{{ ep.format }}</span></td>
+                  <td><strong>{{ ep.operation }}</strong></td>
+                  <td class="ep-desc">{{ ep.description }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="5" class="text-center py-4">
+                    <span class="text-muted">Aucune documentation disponible.</span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+</div>

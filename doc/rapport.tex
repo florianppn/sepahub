@@ -1,0 +1,408 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{float}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    urlcolor=blue,
+    linktoc=all,
+    bookmarksnumbered=true,
+    bookmarksopen=true,
+    pdfstartview=FitH
+}
+
+\geometry{
+    a4paper,
+    top=3cm,
+    bottom=3cm,
+    left=2.5cm,
+    right=2.5cm,
+}
+
+\pagestyle{empty}
+
+\begin{document}
+
+\hypersetup{pageanchor=false}
+
+\pagestyle{plain}
+
+\begin{titlepage}
+    
+    \centering
+
+    \includegraphics[width=0.3\textwidth]{univ_rouen.jpg}
+
+    \vspace{2cm}
+    
+    {Master 1 GIL - XML \\ \textcolor{red}{Projet : sepahub}}
+
+    \vspace{2cm}
+    
+    \begin{center}
+        \rule{\textwidth}{1.5pt}
+        \vskip 1cm
+        {\huge\bfseries RAPPORT MINI PROJET}
+        \vskip 1cm
+        \rule{\textwidth}{1.5pt}
+    \end{center}
+    
+    \vspace{2cm}
+    
+\fbox{%
+    \begin{minipage}{12cm}
+        Version: \textcolor{red}{2.0}\\\\
+        Date: \textcolor{red}{24/09/2026}\\\\
+        Rédigé par: \textcolor{red}{Florian Pépin}\\\\
+        Note: \textit{Fork et refonte du projet SEPA26-REST}\\
+    \end{minipage}%
+}
+
+\end{titlepage}
+
+\hypersetup{pageanchor=true}
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+\section{Introduction}
+
+Ce projet porte sur la réalisation du service REST SEPA26 et de son interface Web. L'objectif est de construire une architecture basée sur la norme ISO 20022 (prélèvement SEPA Direct Debit, format \texttt{pain.008.001.02}) fournie en cours pour gérer des transactions bancaires. Le déploiement est entièrement conteneurisé et orchestré via Docker Compose (Frontend Angular, Backend Spring Boot et Base de données MariaDB).
+
+\newpage
+
+\section{Architecture du Projet}
+
+L'application est structurée selon un modèle classique en couches (Layered Architecture), garantissant une stricte séparation des responsabilités conformément aux principes SOLID et DRY.
+
+\subsection{Organisation Logicielle}
+L'application suit une architecture en couches, dont voici les responsabilités principales :
+\begin{itemize}
+    \item \textbf{Couche de Présentation (API REST) :} Gère les requêtes HTTP via des contrôleurs REST stricts (\texttt{@RestController}), assure le rendu en XML (JAXB) et JSON (Jackson), la transformation HTML via XSLT (Saxon-HE), et la normalisation des réponses d'erreur via un gestionnaire global (\texttt{@RestControllerAdvice}).
+    \item \textbf{Couche de Service :} Centralise la logique métier SEPA, orchestre la validation technique et métier, et délègue les transformations XML à des services spécialisés.
+    \item \textbf{Couche d'Accès aux Données :} Assure la persistance relationnelle via Spring Data JPA et MariaDB.
+    \item \textbf{DTO \& Utilitaires :} Facilitent le transfert de données, l'adaptation temporelle et les transformations XSLT.
+\end{itemize}
+
+\subsection{Stack Technique}
+Le service repose sur une stack Java 21 moderne et robuste :
+\begin{itemize}
+    \item \textbf{Framework :} Spring Boot 3 (Spring Web, Spring Data JPA).
+    \item \textbf{Gestion des dépendances :} Maven.
+    \item \textbf{Stockage :} MariaDB 11 (Production/Docker) et H2 (Environnement de test).
+    \item \textbf{Traitement XML :} JAXB (Jakarta XML Binding), Jackson-XML et Saxon-HE (moteur XSLT 2.0/3.0 et XPath).
+    \item \textbf{Interface Frontend :} Angular 22 (Application Single Page autonome servie par Nginx).
+\end{itemize}
+
+\subsection{Points d'accès}
+
+L'application expose une architecture découplée composée d'une API REST backend et d'une interface web utilisateur (Single Page Application Angular).
+
+\subsubsection{API REST}
+L'ensemble des services métiers de manipulation et consultation des transactions SEPA sont exposés sous le préfixe \texttt{/sepa26}. Ces points d'accès sont également accessibles directement via le reverse-proxy Nginx configuré sur le frontend (port 4200) :
+
+\begin{table}[H]
+    \centering
+    \small
+    \begin{tabularx}{\textwidth}{|l|l|l|Y|}
+        \hline
+        \textbf{Méthode} & \textbf{Endpoint} & \textbf{Paramètres} & \textbf{Description / Formats} \\
+        \hline
+        \texttt{GET} & \texttt{/sepa26/resume/xml} & Aucun & Liste des 10 derniers prélèvements (Retour \texttt{application/xml}) \\
+        \hline
+        \texttt{GET} & \texttt{/sepa26/xml/\{id\}} & \texttt{id} (chemin) & Document complet ISO 20022 conforme XSD (\texttt{application/xml}) \\
+        \hline
+        \texttt{GET} & \texttt{/sepa26/html/\{id\}} & \texttt{id} (chemin) & Fiche détaillée générée dynamiquement via transformation XSLT (\texttt{text/html}) \\
+        \hline
+        \texttt{POST} & \texttt{/sepa26/insert} & \texttt{validate} (opt.) & Insertion d'un prélèvement (\texttt{consumes: application/xml}, \texttt{produces: application/xml}). Évalué via la chaîne de responsabilité. \\
+        \hline
+        \texttt{DELETE} & \texttt{/sepa26/delete/\{id\}} & \texttt{id} (chemin) & Suppression définitive d'une transaction et statut \texttt{DELETED} (\texttt{application/xml}) \\
+        \hline
+        \texttt{GET} & \texttt{/sepa26/search} & \texttt{date}, \texttt{sum} (opt.) & Recherche multicritères par date minimale et montant minimal (\texttt{application/xml}) \\
+        \hline
+    \end{tabularx}
+    \caption{Points d'accès de l'API REST Backend (/sepa26)}
+\end{table}
+
+\newpage
+
+\subsubsection{Interface Utilisateur}
+L'interface utilisateur de l'application est intégralement prise en charge par l'application moderne Angular (servie sur le port 4200), qui consomme les points d'accès de métadonnées et de documentation de l'API :
+
+\begin{table}[H]
+    \centering
+    \small
+    \begin{tabularx}{\textwidth}{|l|l|Y|}
+        \hline
+        \textbf{Composant} & \textbf{URL / Route} & \textbf{Fonctionnalité} \\
+        \hline
+        Frontend Angular & \texttt{/} ou \texttt{/transactions} & Tableau de bord et liste des 10 dernières transactions avec suppression modale \\
+        \hline
+        Frontend Angular & \texttt{/transactions/:id} & Consultation détaillée avec visualiseur XML indenté et copie presse-papier \\
+        \hline
+        Frontend Angular & \texttt{/transfert} & Dépôt et saisie de document XML avec validation XSD et notification toast \\
+        \hline
+        Frontend Angular & \texttt{/search} & Interface de recherche filtrée par date et montant \\
+        \hline
+        Frontend Angular & \texttt{/help} & Interface de documentation interactive consommant dynamiquement le catalogue JSON du backend \\
+        \hline
+        Backend REST & \texttt{http://localhost:8100/} & Métadonnées de l'application et statut de santé en JSON (\texttt{application/json}) \\
+        \hline
+        Backend REST & \texttt{/help} ou \texttt{/sepa26/help} & Catalogue exhaustif des routes au format JSON consommé par le frontend \\
+        \hline
+    \end{tabularx}
+    \caption{Routes de l'Interface Web et Documentation}
+\end{table}
+
+\newpage
+
+\section{Patrons de Conception}
+
+Pour améliorer la lisibilité, la modularité et la maintenabilité du backend, trois patrons de conception du Gang of Four (GoF) ont été mis en place : le \textbf{Builder}, l'\textbf{Abstract Factory} et la \textbf{Chaîne de Responsabilité}.
+
+\subsection{Patron Builder (Monteur)}
+
+\subsubsection{Motivation}
+Un document SEPA ISO 20022 comporte de nombreux objets imbriqués. Le patron \textbf{Builder} permet de décomposer l'assemblage de ce document complexe en étapes atomiques explicites, sécurisées par un contrôle d'état strict (\textit{fail-fast}). Il masque la complexité technique d'instanciation, bannit les structures de classes internes parasites, garantit des valeurs par défaut conformes au standard bancaire et calcule automatiquement le nombre d'opérations et la somme de contrôle financière.
+
+\subsubsection{Correspondance des Acteurs}
+Le tableau suivant présente le rôle de chaque classe dans le patron :
+
+\begin{table}[H]
+    \centering
+    \small
+    \begin{tabularx}{\textwidth}{|l|p{4.2cm}|Y|}
+        \hline
+        \textbf{Rôle GoF} & \textbf{Classe SEPAHub} & \textbf{Rôle dans le projet} \\
+        \hline
+        \textbf{Builder} & \texttt{ISepaDocumentBuilder} & Interface déclarant les étapes de montage (\texttt{reset}, \allowbreak\texttt{setGroupHeader}, \allowbreak\texttt{beginTransaction}, \allowbreak\texttt{buildTransaction}, \allowbreak\texttt{getResult}). \\
+        \hline
+        \textbf{ConcreteBuilder} & \texttt{SepaDocumentBuilder} & Monteur concret GoF sans classe interne parasite, avec garde-fous d'état et calcul automatique des totaux. \\
+        \hline
+        \textbf{Director} & \texttt{SepaDocumentDirector} & Propose des constructions types (ex: document de test avec deux transactions ou document unitaire). \\
+        \hline
+        \textbf{Product} & \texttt{Document} & Objet complet représentant le document SEPA ISO 20022 (pain.008). \\
+        \hline
+        \textbf{Client} & \texttt{DataInitializer} / Tests & Utilise le monteur et le directeur pour générer des documents prêts à l'emploi. \\
+        \hline
+    \end{tabularx}
+    \caption{Correspondance des acteurs du patron Builder}
+\end{table}
+
+\newpage
+
+\subsection{Patron Abstract Factory (Fabrique Abstraite)}
+
+\subsubsection{Motivation}
+Dans la conception originale du GoF, le patron \textbf{Abstract Factory} opère en synergie naturelle avec le patron \textbf{Builder} : la fabrique est spécialisée dans l'instanciation technique des familles de sous-nœuds XML ISO 20022 (\texttt{Party}, \texttt{Account}, \texttt{Agent}, \texttt{Mandate}, \texttt{AccountSchemeId}), tandis que le monteur se focalise exclusivement sur le séquençage et la validation d'état. Cette séparation isole les détails JAXB et respecte le principe de responsabilité unique (SRP).
+
+\subsubsection{Correspondance des Acteurs}
+Le tableau suivant présente les acteurs du patron Fabrique Abstraite :
+
+\begin{table}[H]
+    \centering
+    \small
+    \begin{tabularx}{\textwidth}{|l|p{4.2cm}|Y|}
+        \hline
+        \textbf{Rôle GoF} & \textbf{Classe SEPAHub} & \textbf{Rôle dans le projet} \\
+        \hline
+        \textbf{AbstractFactory} & \texttt{ISepaElementFactory} & Interface déclarant les méthodes de fabrication des sous-éléments SEPA. \\
+        \hline
+        \textbf{ConcreteFactory} & \texttt{SepaElementFactory} & Instancie les objets JAXB avec les valeurs par défaut normatives (EUR, SEPA, RCUR). \\
+        \hline
+        \textbf{Client} & \texttt{SepaDocumentBuilder} & Délègue la création des briques unitaires à la fabrique injectée. \\
+        \hline
+    \end{tabularx}
+    \caption{Correspondance des acteurs du patron Abstract Factory}
+\end{table}
+
+\newpage
+
+\subsection{Patron Chain of Responsibility (Chaîne de Responsabilité)}
+
+\subsubsection{Motivation}
+Lors de la réception d'un flux SEPA, plusieurs vérifications successives sont nécessaires (schéma XSD, syntaxe XML, unicité de l'identifiant et cohérence de la somme). La \textbf{Chaîne de Responsabilité} isole chaque règle dans un maillon dédié et testable unitairement, tout en interrompant le traitement dès la première anomalie détectée (\textit{fail-fast}).
+
+\subsubsection{Correspondance des Acteurs}
+Le tableau suivant présente le rôle de chaque classe dans la chaîne de validation :
+
+\begin{table}[H]
+    \centering
+    \small
+    \begin{tabularx}{\textwidth}{|l|p{4.5cm}|Y|}
+        \hline
+        \textbf{Rôle GoF} & \textbf{Classe SEPAHub} & \textbf{Rôle dans le projet} \\
+        \hline
+        \textbf{Handler} & \texttt{AbstractValidationHandler} & Classe abstraite gérant l'enchaînement des étapes (\texttt{setNext}, \allowbreak\texttt{checkNext}). \\
+        \hline
+        \textbf{ConcreteHandler} & Maillons de validation & Exécute un contrôle spécifique et passe la main au maillon suivant (\texttt{XsdValidationHandler}, \allowbreak\texttt{XmlParsingHandler}, \allowbreak\texttt{PmtIdUniquenessHandler}, \allowbreak\texttt{ControlSumValidationHandler}). \\
+        \hline
+        \textbf{Context} & \texttt{ValidationContext} & Objet partagé qui transporte les données le long de la chaîne. \\
+        \hline
+        \textbf{Coordinator} & \texttt{SepaValidationChain} & Service Spring qui assemble les maillons et lance la validation. \\
+        \hline
+        \textbf{Client} & \texttt{PostController} & Contrôleur REST qui appelle la chaîne lors de la réception d'un document. \\
+        \hline
+    \end{tabularx}
+    \caption{Correspondance des acteurs de la Chaîne de Responsabilité}
+\end{table}
+
+\clearpage
+
+\section{Description de l'architecture Docker et Déploiement}
+
+Afin d'assurer un déploiement fluide, reproductible et moderne du service SEPA26, l'architecture s'appuie sur une conteneurisation complète orchestrée par \texttt{Docker Compose}.
+
+\subsection{Architecture Multi-Services}
+Le projet est découplé en trois services autonomes communiquant au sein d'un réseau privé Docker (\texttt{sepa-network}) :
+
+\begin{itemize}
+    \item \textbf{Base de données (MariaDB) :} Conteneur MariaDB 11 initialisé automatiquement avec la base \texttt{sepa26\_db} et un utilisateur dédié. La persistance des transactions est garantie par un volume Docker nommé (\texttt{mariadb\_data}).
+    \item \textbf{Serveur Backend (Spring Boot 3 / Java 21) :} Conteneurisé via un \texttt{Dockerfile} multi-stage. Une première étape compile le projet avec Maven dans un conteneur dédié, puis l'artefact JAR est injecté dans une image alpine minimale avec le JRE 21 Temurin. Le service est lié dynamiquement à la base via les variables d'environnement (\texttt{DB\_URL}, \texttt{DB\_USER}, \texttt{DB\_PASSWORD}).
+    \item \textbf{Frontend (Angular) :} Application Single Page (SPA) développée en Angular, compilée puis servie par un conteneur Nginx. Nginx intègre également une configuration de reverse-proxy qui redirige les appels \texttt{/sepa26/*} vers le backend Spring Boot, éliminant tout besoin de configuration CORS dans le code Java.
+\end{itemize}
+
+\subsection{Sécurité et Isolation Réseau}
+L'architecture Docker privilégie la sécurité :
+\begin{itemize}
+    \item \textbf{Isolation réseau :} Grâce au réseau bridge \texttt{sepa-network}, la base de données MariaDB communique de manière sécurisée et privée avec le backend Spring Boot.
+    \item \textbf{Transparence et Reverse Proxy :} Les clients accèdent au frontend sur le port 4200. Nginx achemine en interne les requêtes d'API vers le backend sur le port 8100.
+\end{itemize}
+
+\subsection{Maintenance et Cycle de Vie}
+Grâce à \texttt{docker-compose}, la gestion du cycle de vie de la plateforme est simplifiée :
+\begin{itemize}
+    \item \textbf{Démarrage complet :} \texttt{docker compose up --build -d} compile et démarre l'ensemble des conteneurs en respectant l'ordre de dépendance (la base de données démarre en premier avec vérification de son état de santé).
+    \item \textbf{Arrêt des services :} \texttt{docker compose down} stoppe proprement les conteneurs tout en préservant le volume de données.
+    \item \textbf{Consultation des logs :} \texttt{docker compose logs -f} permet de suivre les flux d'exécution en temps réel.
+\end{itemize}
+\clearpage
+
+\appendix
+\section{Inventaire des Entités par Paquetage}
+
+Ce tableau exhaustif recense l'ensemble des composants logiciels, entités, services et utilitaires développés dans le backend Spring Boot, classés selon leur paquetage Java respectif :
+
+\small
+\begin{longtable}{|p{3.8cm}|p{4.6cm}|p{6.8cm}|}
+    \hline
+    \textbf{Paquetage} & \textbf{Composant / Entité} & \textbf{Rôle et Responsabilité} \\
+    \hline
+    \endfirsthead
+    \hline
+    \textbf{Paquetage} & \textbf{Composant / Entité} & \textbf{Rôle et Responsabilité} \\
+    \hline
+    \endhead
+
+    \texttt{fr.univrouen.sepa26} & \texttt{Sepa26Application} & Classe principale démarrant l'application Spring Boot et initialisant le contexte applicatif. \\
+    \hline
+
+    \texttt{.builder} & \texttt{ISepaDocumentBuilder} & Interface formelle GoF déclarant les opérations abstraites de construction d'un document SEPA. \\
+    \cline{2-3}
+    & \texttt{SepaDocumentBuilder} & Monteur concret GoF à étapes sans classe interne parasite, avec contrôle d'état et calcul automatique des totaux. \\
+    \cline{2-3}
+    & \texttt{ISepaElementFactory} & Interface GoF Abstract Factory pour la fabrication des nœuds unitaires ISO 20022. \\
+    \cline{2-3}
+    & \texttt{SepaElementFactory} & Fabrique concrète instanciant les familles de composants JAXB (comptes, agents, mandats, ICS). \\
+    \cline{2-3}
+    & \texttt{SepaDocumentDirector} & Directeur GoF orchestrant la fabrication de documents SEPA préconfigurés (ex: documents types de test à deux transactions). \\
+    \hline
+
+    \texttt{.config} & \texttt{XmlConfig} & Configuration Spring déclarant sous forme de beans réutilisables le schéma XSD précompilé (\texttt{Schema}) et le contexte JAXB (\texttt{JAXBContext}). \\
+    \hline
+
+    \texttt{.controllers} & \texttt{GetController} & Contrôleur REST gérant la consultation GET (résumé XML, détail XML et détail HTML via transformation XSLT Saxon-HE). \\
+    \cline{2-3}
+    & \texttt{PostController} & Contrôleur REST gérant la soumission (\texttt{POST /insert}) et la suppression (\texttt{DELETE /delete/\{id\}}). \\
+    \cline{2-3}
+    & \texttt{SearchController} & Contrôleur REST gérant la recherche multicritères par date minimale et montant minimal (\texttt{GET /search}). \\
+    \cline{2-3}
+    & \texttt{IndexController} & Contrôleur REST fournissant les métadonnées de santé (\texttt{/}) et le catalogue de documentation JSON (\texttt{/help}, \texttt{/sepa26/help}) consommé par Angular. \\
+    \cline{2-3}
+    & \texttt{RestExceptionHandler} & Gestionnaire global \texttt{@RestControllerAdvice} normalisant les erreurs REST (JSON \texttt{ProblemDetail} RFC 7807 et XML \texttt{SepaResponse}). \\
+    \hline
+
+    \texttt{.dto} & \texttt{DocumentList} & DTO encapsulant une collection de documents pour le rendu XML du résumé (\texttt{/resume/xml}). \\
+    \cline{2-3}
+    & \texttt{EndpointDoc} & Record immuable décrivant les métadonnées d'un point d'accès de l'API (URL, méthode, format, opération, description). \\
+    \cline{2-3}
+    & \texttt{SearchResponse} & DTO représentant la réponse de recherche (\texttt{status} et \texttt{DocumentList}). \\
+    \cline{2-3}
+    & \texttt{SepaResponse} & DTO standardisé pour les messages de retour de l'API REST (\texttt{id}, \texttt{status}, \texttt{description}). \\
+    \hline
+
+    \texttt{.init} & \texttt{DataInitializer} & Composant d'amorçage \texttt{CommandLineRunner} qui peuple la base de données au premier démarrage via le patron Builder. \\
+    \hline
+
+    \texttt{.model} & \texttt{Document} & Entité racine JPA et racine XML JAXB représentant l'enveloppe ISO 20022 (\texttt{pain.008.001.02}). \\
+    \cline{2-3}
+    & \texttt{CstmrDrctDbtInitn} & Entité JPA et élément JAXB modélisant le bloc d'initialisation du prélèvement direct. \\
+    \cline{2-3}
+    & \texttt{GrpHdr} & Entité JPA d'en-tête de lot bancaire (\texttt{MsgId}, \texttt{CreDtTm}, \texttt{NbOfTxs}, \texttt{CtrlSum}, \texttt{InitgPty}). \\
+    \cline{2-3}
+    & \texttt{PmtInf} & Entité JPA des informations de paiement communes au lot de prélèvement (créancier, compte, date d'échéance). \\
+    \cline{2-3}
+    & \texttt{DrctDbtTxInf} & Entité JPA de la transaction unitaire de prélèvement (référence \texttt{PmtId}, montant, mandat, débiteur). \\
+    \cline{2-3}
+    & \texttt{DrctDbtTx} / \texttt{MndtRltdInf} & Objets intégrés (\texttt{@Embeddable}) encapsulant les données de prélèvement direct et de mandat (RUM, date). \\
+    \cline{2-3}
+    & \texttt{InstdAmt} & Objet monétaire intégré (\texttt{@Embeddable}) encapsulant la valeur numérique et le code devise (\texttt{Ccy="EUR"}). \\
+    \cline{2-3}
+    & Objets de valeur du domaine & Classes autonomes intégrées (\texttt{@Embeddable}) représentant les tiers, comptes et banques (\texttt{Party}, \texttt{Account}, \texttt{AccountId}, \texttt{PrivateId}, \texttt{OtherIdentification}, \texttt{SchemeName}, \texttt{Agent}, \texttt{FinInstnId}, \texttt{AccountSchemeId}, \texttt{PaymentTypeInfo}, \texttt{ServiceLevel}, \texttt{LocalInstrument}). \\
+    \cline{2-3}
+    & \texttt{package-info} & Configuration JAXB définissant l'espace de noms XML par défaut (\texttt{http://univ.fr/sepa26}) pour tout le paquetage. \\
+    \hline
+
+    \texttt{.repository} & \texttt{DocumentRepository} & Interface Spring Data JPA fournissant les requêtes CRUD, la recherche par \texttt{PmtId} et la recherche multicritères. \\
+    \hline
+
+    \texttt{.services} & \texttt{IHelpService} / \texttt{HelpService} & Service fournissant le catalogue typé de documentation des points d'accès. \\
+    \cline{2-3}
+    & \texttt{ISepaService} & Interface formelle du contrat de service métier (principes DIP et OCP). \\
+    \cline{2-3}
+    & \texttt{SepaService} & Service métier coordonnant la persistance, la recherche et la suppression des documents en base. \\
+    \cline{2-3}
+    & \texttt{SepaXmlService} & Service dédié aux opérations XML techniques (sérialisation JAXB, validation XSD thread-safe, protection XXE). \\
+    \hline
+
+    \texttt{.util} & \texttt{LocalDateAdapter} & Adaptateur JAXB pour la conversion des dates ISO \texttt{LocalDate} vers \texttt{xs:date}. \\
+    \cline{2-3}
+    & \texttt{LocalDateTimeAdapter} & Adaptateur JAXB pour la conversion des dates/heures \texttt{LocalDateTime} vers \texttt{xs:dateTime}. \\
+    \cline{2-3}
+    & \texttt{XsltTransformer} & Composant utilisant Saxon-HE pour transformer les documents XML en HTML via les feuilles XSLT. \\
+    \hline
+
+    \texttt{.validation} & \texttt{AbstractValidationHandler} & Classe abstraite de base du patron Chain of Responsibility définissant le chaînage dynamique des maillons. \\
+    \cline{2-3}
+    & \texttt{ValidationContext} & Contexte d'état partagé circulant à travers la chaîne (flux XML brut, document désérialisé, résultat). \\
+    \cline{2-3}
+    & \texttt{ValidationResult} & Objet encapsulant le statut de validation et l'éventuel message d'erreur. \\
+    \cline{2-3}
+    & \texttt{XsdValidationHandler} & Maillon validant la conformité syntaxique avec le schéma XSD officiel. \\
+    \cline{2-3}
+    & \texttt{XmlParsingHandler} & Maillon désérialisant le flux XML en objet \texttt{Document} JAXB. \\
+    \cline{2-3}
+    & \texttt{PmtIdUniquenessHandler} & Maillon métier vérifiant l'absence de doublon de \texttt{PmtId} en base MariaDB. \\
+    \cline{2-3}
+    & \texttt{ControlSumValidationHandler} & Maillon métier vérifiant la cohérence financière de la somme de contrôle \texttt{CtrlSum}. \\
+    \cline{2-3}
+    & \texttt{SepaValidationChain} & Coordinateur Spring assemblant la chaîne de responsabilité et orchestrant son évaluation. \\
+    \hline
+\end{longtable}
+
+\end{document}

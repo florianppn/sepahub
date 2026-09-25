@@ -1,0 +1,35 @@
+package fr.univrouen.sepa26.model;
+
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+
+@Embeddable
+@XmlAccessorType(XmlAccessType.FIELD)
+public class FinInstnId {
+
+    @XmlElement(name = "BIC")
+    private String bic;
+
+    @XmlElement(name = "Othr")
+    @Embedded
+    private OtherIdentification othr;
+
+    public String getBic() {
+        return bic;
+    }
+
+    public void setBic(String bic) {
+        this.bic = bic;
+    }
+
+    public OtherIdentification getOthr() {
+        return othr;
+    }
+
+    public void setOthr(OtherIdentification othr) {
+        this.othr = othr;
+    }
+}

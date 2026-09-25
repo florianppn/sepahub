@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<p:Document xmlns:p="http://univ.fr/sepa26"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://univ.fr/sepa26 sepa26.xsd">
+  <p:CstmrDrctDbtInitn>
+    <p:GrpHdr>
+      <p:MsgId>MSGID-123456</p:MsgId>
+      <p:CreDtTm>2026-09-24T12:00:00</p:CreDtTm>
+      <p:NbOfTxs>1</p:NbOfTxs>
+      <p:CtrlSum>1000.0</p:CtrlSum>
+      <p:InitgPty>
+        <p:Nm>Societe SEPAHub</p:Nm>
+      </p:InitgPty>
+    </p:GrpHdr>
+    <p:PmtInf>
+      <p:PmtInfId>REF-REMISE-123</p:PmtInfId>
+      <p:NbOfTxs>1</p:NbOfTxs>
+      <p:CtrlSum>1000.0</p:CtrlSum>
+      <p:PmtTpInf>
+        <p:SvcLvl>
+          <p:Cd>SEPA</p:Cd>
+        </p:SvcLvl>
+        <p:LclInstrm>
+          <p:Cd>CORE</p:Cd>
+        </p:LclInstrm>
+        <p:SeqTp>RCUR</p:SeqTp>
+      </p:PmtTpInf>
+      <p:ReqdColltnDt>2026-10-01</p:ReqdColltnDt>
+      <p:Cdtr>
+        <p:Nm>Societe SEPAHub</p:Nm>
+      </p:Cdtr>
+      <p:CdtrAcct>
+        <p:Id>
+          <p:IBAN>FR7610041010050500013M02606</p:IBAN>
+        </p:Id>
+      </p:CdtrAcct>
+      <p:CdtrAgt>
+        <p:FinInstnId>
+          <p:BIC>BANKFRPPXXX</p:BIC>
+        </p:FinInstnId>
+      </p:CdtrAgt>
+      <p:CdtrSchmeId>
+        <p:Id>
+          <p:PrvtId>
+            <p:Othr>
+              <p:Id>FR00ZZZ123456</p:Id>
+              <p:SchmeNm>
+                <p:Prtry>SEPA</p:Prtry>
+              </p:SchmeNm>
+            </p:Othr>
+          </p:PrvtId>
+        </p:Id>
+      </p:CdtrSchmeId>
+      <p:DrctDbtTxInf>
+        <p:PmtId>REF-OPE-AAAA</p:PmtId>
+        <p:InstdAmt Ccy="EUR">1000.0</p:InstdAmt>
+        <p:DrctDbtTx>
+          <p:MndtRltdInf>
+            <p:MndtId>MANDAT-NO-55555</p:MndtId>
+            <p:DtOfSgntr>2026-01-01</p:DtOfSgntr>
+          </p:MndtRltdInf>
+        </p:DrctDbtTx>
+        <p:DbtrAgt>
+          <p:FinInstnId>
+            <p:BIC>BANKGBULXXX</p:BIC>
+          </p:FinInstnId>
+        </p:DbtrAgt>
+        <p:Dbtr>
+          <p:Nm>Mr Client Dupont</p:Nm>
+        </p:Dbtr>
+        <p:DbtrAcct>
+          <p:Id>
+            <p:IBAN>FR763004136210001234567811</p:IBAN>
+          </p:Id>
+        </p:DbtrAcct>
+        <p:RmtInf>Facture service n°1</p:RmtInf>
+      </p:DrctDbtTxInf>
+    </p:PmtInf>
+  </p:CstmrDrctDbtInitn>
+</p:Document>
