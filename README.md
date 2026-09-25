@@ -63,23 +63,6 @@ docker compose logs -f
 
 ---
 
-## Développement & Tests Locaux
-
-- **Backend (Maven)** :
-  ```bash
-  cd backend
-  mvn clean test
-  ```
-- **Frontend (Angular)** :
-  ```bash
-  cd frontend
-  npm install
-  npm test -- --watch=false
-  npm run build
-  ```
-
----
-
 ## Points d'Accès Principaux
 
 - **Interface Frontend Angular :** [http://localhost:4200](http://localhost:4200)
@@ -90,3 +73,7 @@ docker compose logs -f
 - **API REST Spring Boot :** [http://localhost:8100/](http://localhost:8100/) (métadonnées & statut de santé en JSON)
 - **Catalogue de Documentation REST :** [http://localhost:8100/help](http://localhost:8100/help) (flux JSON des routes)
 - **Rapport de Conception complet :** [doc/rapport.pdf](doc/rapport.pdf)
+
+## Fork
+
+Ce projet est un fork du projet [SEPA26](https://github.com/M1-ROUEN-GIL/application-rest).
