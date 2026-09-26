@@ -1,5 +1,5 @@
 # Étape 1 : Compilation du projet avec Maven
-FROM maven:3.9-eclipse-temurin-21-alpine AS builder
+FROM maven:3.9-eclipse-temurin-25-alpine AS builder
 WORKDIR /app
 
 COPY pom.xml .
@@ -7,7 +7,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Étape 2 : Image d'exécution minimale
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-alpine
 
 ENV JAVA_HOME=/opt/java/openjdk
 ENV PATH="$PATH:$JAVA_HOME/bin"

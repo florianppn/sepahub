@@ -100,9 +100,9 @@ L'application suit une architecture en couches, dont voici les responsabilités 
 \end{itemize}
 
 \subsection{Stack Technique}
-Le service repose sur une stack Java 21 moderne et robuste :
+Le service repose sur une stack Java 25 moderne et robuste :
 \begin{itemize}
-    \item \textbf{Framework :} Spring Boot 3 (Spring Web, Spring Data JPA).
+    \item \textbf{Framework :} Spring Boot 4 (Spring Web, Spring Data JPA).
     \item \textbf{Gestion des dépendances :} Maven.
     \item \textbf{Stockage :} MariaDB 11 (Production/Docker) et H2 (Environnement de test).
     \item \textbf{Traitement XML :} JAXB (Jakarta XML Binding), Jackson-XML et Saxon-HE (moteur XSLT 2.0/3.0 et XPath).
@@ -273,7 +273,7 @@ Le projet est découplé en trois services autonomes communiquant au sein d'un r
 
 \begin{itemize}
     \item \textbf{Base de données (MariaDB) :} Conteneur MariaDB 11 initialisé automatiquement avec la base \texttt{sepa26\_db} et un utilisateur dédié. La persistance des transactions est garantie par un volume Docker nommé (\texttt{mariadb\_data}).
-    \item \textbf{Serveur Backend (Spring Boot 3 / Java 21) :} Conteneurisé via un \texttt{Dockerfile} multi-stage. Une première étape compile le projet avec Maven dans un conteneur dédié, puis l'artefact JAR est injecté dans une image alpine minimale avec le JRE 21 Temurin. Le service est lié dynamiquement à la base via les variables d'environnement (\texttt{DB\_URL}, \texttt{DB\_USER}, \texttt{DB\_PASSWORD}).
+    \item \textbf{Serveur Backend (Spring Boot 4 / Java 25) :} Conteneurisé via un \texttt{Dockerfile} multi-stage. Une première étape compile le projet avec Maven dans un conteneur dédié, puis l'artefact JAR est injecté dans une image alpine minimale avec le runtime Java 25 Temurin. Le service est lié dynamiquement à la base via les variables d'environnement (\texttt{DB\_URL}, \texttt{DB\_USER}, \texttt{DB\_PASSWORD}).
     \item \textbf{Frontend (Angular) :} Application Single Page (SPA) développée en Angular, compilée puis servie par un conteneur Nginx. Nginx intègre également une configuration de reverse-proxy qui redirige les appels \texttt{/sepa26/*} vers le backend Spring Boot, éliminant tout besoin de configuration CORS dans le code Java.
 \end{itemize}
 

@@ -8,7 +8,7 @@ Projet de gestion et de traitement de transactions SEPA (ISO 20022).
 
 ```text
 sepahub/
-├── backend/          # API REST Spring Boot 3 (Java 21, JPA, XSD, XSLT)
+├── backend/          # API REST Spring Boot 4 (Java 25, JPA, XSD, XSLT)
 │   ├── Dockerfile
 │   ├── pom.xml
 │   └── src/
@@ -32,7 +32,7 @@ Le projet s'exécute dans une architecture multi-conteneurs orchestrée par **Do
 | Service | Répertoire source | Rôle | Port hôte |
 | : | : | : | : |
 | **`frontend`** | `frontend/` | Application Web Angular (SPA servie via Nginx) | [http://localhost:4200](http://localhost:4200) |
-| **`backend`** | `backend/` | API REST Spring Boot 3 (Java 21) | [http://localhost:8100](http://localhost:8100) |
+| **`backend`** | `backend/` | API REST Spring Boot 4 (Java 25) | [http://localhost:8100](http://localhost:8100) |
 | **`db`** | - | Base de données MariaDB 11 | `3306` |
 
 Le conteneur `frontend` intègre un reverse-proxy Nginx sur `/sepa26/` vers le `backend`, évitant ainsi toute contrainte CORS lors de l'utilisation dans le navigateur.
